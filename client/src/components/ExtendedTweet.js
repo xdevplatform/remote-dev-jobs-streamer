@@ -1,5 +1,4 @@
 import React from "react";
-import "../stylesheets/Tweet.css";
 import Moment from "react-moment";
 
 const hashtags = data => {
@@ -26,13 +25,13 @@ const annotations = data => {
     extended_tweet.entities.annotations
   ) {
     return extended_tweet.entities.annotations.context.map(context => (
-      <span className="annotations ui small teal basic label">
+      <span className="ui small teal basic label">
         {context.context_entity_name}
       </span>
     ));
   } else if (data.entities) {
     return data.entities.annotations.context.map(context => (
-      <span className="annotations ui small teal basic label">
+      <span className="ui small teal basic label">
         {context.context_entity_name}
       </span>
     ));

@@ -20,7 +20,7 @@ const PASS = process.env.TWITTER_PASSWORD;
 const bearerTokenURL = new URL("https://api.twitter.com/oauth2/token");
 
 const streamURL = new URL(
-  "https://api.twitter.com/labs/1/tweets/stream/filter"
+  "https://api.twitter.com/labs/1/tweets/stream/filter?format=detailed"
 );
 
 const searchURL = new URL(
@@ -108,19 +108,30 @@ app.get("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
   }
 });
 
-app.post(
-  "https://api.twitter.com/labs/1/tweets/stream/filter/rules",
-  async (req, res) => {
-    const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-    const requestConfig = {
-      url: rulesURL,
-      auth: {
-        bearer: token
-      },
-      json: true
-    };
+app.post("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
+  console.log("req.body =>", req.body);
+  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
+  const requestConfig = {
+    url: rulesURL,
+    auth: {
+      bearer: token
+    },
+    json: req.body
+  };
+
+  try {
+    const response = await post(requestConfig);
+
+    if (response.statusCode === 200 || response.statusCode === 201) {
+      res.send(response);
+    } else {
+      throw new Error(response.body.error.message);
+      return;
+    }
+  } catch (e) {
+    res.statusCode(response.statusCode).send(response);
   }
-);
+});
 
 app.get("/api/tweets/search/30day", async (req, res) => {
   const query =
@@ -160,7 +171,7 @@ app.get("/api/stream/filter", async (req, res) => {
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
   console.log("token =>", token);
   const config = {
-    url: "https://api.twitter.com/labs/1/tweets/stream/filter?format=detailed",
+    url: streamURL,
     auth: {
       bearer: token
     },
@@ -178,8 +189,9 @@ app.get("/api/stream/filter", async (req, res) => {
     })
     .on("error", error => {
       console.log("error =>", error);
-      if ((error.code = "ETIMEDOUT")) {
-        stream.emit("timeout");
+      if (error.code === "ESOCKETTIMEDOUT") {
+        stream.abort();
+        res.send({ error: "timeout" });
       }
     });
 });

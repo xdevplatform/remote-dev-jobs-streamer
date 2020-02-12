@@ -1,11 +1,17 @@
 import React from "react";
+import axios from "axios";
 
-export const Rule = ({ data }) => {
+export const Rule = ({ data, onRuleDelete }) => {
   return (
     <div className="ui segment">
       <p>{data.value}</p>
       <div className="ui label">tag: {data.tag}</div>
-      <div className="ui right floated negative button">Delete</div>
+      <button
+        className="ui right floated negative button"
+        onClick={() => onRuleDelete(data.id)}
+      >
+        Delete
+      </button>
     </div>
   );
 };

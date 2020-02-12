@@ -4,7 +4,7 @@ import { BrowserRouter, Route } from "react-router-dom";
 import Navbar from "./Navbar";
 import TweetList from "./TweetList";
 import AnnotationTweets from "./AnnotationTweets";
-import Rules from "./Rules";
+import RuleList from "./RuleList";
 
 class App extends React.Component {
   render() {
@@ -18,8 +18,8 @@ class App extends React.Component {
             src="/Twitter_Logo_Blue.png"
             alt="Twitter Logo"
           />
-          <div class="content">
-            Remote Developer Jobs{" "}
+          <div className="content">
+            Remote Developer Jobs
             <div className="sub header">Powered by Twitter data</div>
           </div>
         </h1>
@@ -28,7 +28,7 @@ class App extends React.Component {
           <BrowserRouter>
             <Navbar />
             <Route exact path="/jobs/recent" component={TweetList} />
-            <Route exact path="/rules" component={Rules} />
+            <Route exact path="/rules" component={RuleList} />
             <Route
               exact
               path="/jobs/annotations"
