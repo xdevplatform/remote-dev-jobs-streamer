@@ -8,7 +8,6 @@ const port = process.env.PORT || 5000;
 const post = util.promisify(request.post);
 const get = util.promisify(request.get);
 const https = require("https");
-const auth = require("http-auth");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
