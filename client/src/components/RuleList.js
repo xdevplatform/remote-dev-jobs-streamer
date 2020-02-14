@@ -95,7 +95,7 @@ const RuleList = () => {
       }
     } else {
       return (
-        <div class="ui active centered large inline loader">
+        <div className="ui active centered large inline loader">
           <p></p>
           <p></p>
         </div>
@@ -105,6 +105,8 @@ const RuleList = () => {
 
   useEffect(() => {
     (async () => {
+      dispatch({ type: "change_loading_status", payload: true });
+
       const response = await axios.get(
         "/api/labs/1/tweets/stream/filter/rules"
       );
@@ -113,6 +115,7 @@ const RuleList = () => {
         type: "show_rules",
         payload
       });
+      dispatch({ type: "change_loading_status", payload: false });
     })();
   }, []);
 

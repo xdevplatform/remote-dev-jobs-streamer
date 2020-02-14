@@ -2,8 +2,7 @@ import React from "react";
 import { BrowserRouter, Route } from "react-router-dom";
 
 import Navbar from "./Navbar";
-import TweetList from "./TweetList";
-import AnnotationTweets from "./AnnotationTweets";
+import JobList from "./JobList";
 import RuleList from "./RuleList";
 
 class App extends React.Component {
@@ -27,13 +26,8 @@ class App extends React.Component {
         <div className="ui grid">
           <BrowserRouter>
             <Navbar />
-            <Route exact path="/jobs/recent" component={TweetList} />
             <Route exact path="/rules" component={RuleList} />
-            <Route
-              exact
-              path="/jobs/annotations"
-              component={AnnotationTweets}
-            />
+            <Route exact path="/jobs" component={JobList} />
           </BrowserRouter>
         </div>
       </div>
