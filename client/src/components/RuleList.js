@@ -57,10 +57,7 @@ const RuleList = () => {
   const deleteRule = async id => {
     const payload = { delete: { ids: [id] } };
     dispatch({ type: "change_loading_status", payload: true });
-    const response = await axios.post(
-      "/api/labs/1/tweets/stream/filter/rules",
-      payload
-    );
+    await axios.post("/api/labs/1/tweets/stream/filter/rules", payload);
     dispatch({ type: "delete_rule", payload: id });
     dispatch({ type: "change_loading_status", payload: false });
   };
