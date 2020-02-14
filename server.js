@@ -14,17 +14,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
-const USER = process.env.TWITTER_USER;
-const PASS = process.env.TWITTER_PASSWORD;
 
 const bearerTokenURL = new URL("https://api.twitter.com/oauth2/token");
 
 const streamURL = new URL(
-  "https://api.twitter.com/labs/1/tweets/stream/filter"
-);
-
-const searchURL = new URL(
-  "https://api.twitter.com/labs/1/tweets/search?format=detailed"
+  "https://api.twitter.com/labs/1/tweets/stream/filter?format=detailed&expansions=author_id"
 );
 
 const rulesURL = new URL(
@@ -46,42 +40,6 @@ async function bearerToken(auth) {
   const response = await post(requestConfig);
   return JSON.parse(response.body).access_token;
 }
-
-app.get("/api/labs/1/tweets/search", async (req, res) => {
-  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-  const query = "developer remote has:links -is:retweet";
-  const maxResults = 100;
-
-  const requestConfig = {
-    url: searchURL,
-    qs: {
-      query: query,
-      max_results: maxResults,
-      format: "detailed"
-    },
-    auth: {
-      bearer: token
-    },
-    headers: {
-      "User-Agent": "Remote Dev Jobs Streamer"
-    },
-    json: true
-  };
-
-  try {
-    const response = await get(requestConfig);
-
-    if (response.statusCode !== 200) {
-      throw new Error(response.json);
-      return;
-    }
-
-    res.send(response);
-  } catch (e) {
-    console.error(`Could not get search results. An error occurred: ${e}`);
-    process.exit(-1);
-  }
-});
 
 app.get("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
@@ -108,59 +66,34 @@ app.get("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
   }
 });
 
-app.post(
-  "https://api.twitter.com/labs/1/tweets/stream/filter/rules",
-  async (req, res) => {
-    const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-    const requestConfig = {
-      url: rulesURL,
-      auth: {
-        bearer: token
-      },
-      json: true
-    };
-  }
-);
-
-app.get("/api/tweets/search/30day", async (req, res) => {
-  const query =
-    "(developer OR engineer) remote (context:65.847544972781826048 OR context:66.850073441055133696 OR context:66.961961812492148736)";
-
+app.post("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
+  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
   const requestConfig = {
-    url: "https://gnip-api.twitter.com/search/30day/accounts/tony-vu/prod.json",
-    qs: {
-      query: query
-    },
+    url: rulesURL,
     auth: {
-      user: USER,
-      pass: PASS
+      bearer: token
     },
-    headers: {
-      "User-Agent": "Remote Dev Jobs Streamer"
-    },
-    json: true
+    json: req.body
   };
 
   try {
-    const response = await get(requestConfig);
+    const response = await post(requestConfig);
 
-    if (response.statusCode !== 200) {
+    if (response.statusCode === 200 || response.statusCode === 201) {
+      res.send(response);
+    } else {
       throw new Error(response.body.error.message);
       return;
     }
-
-    res.send(response);
   } catch (e) {
-    console.error(`Could not get search results. An error occurred: ${e}`);
-    process.exit(-1);
+    res.statusCode(response.statusCode).send(response);
   }
 });
 
 app.get("/api/stream/filter", async (req, res) => {
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-  console.log("token =>", token);
   const config = {
-    url: "https://api.twitter.com/labs/1/tweets/stream/filter?format=detailed",
+    url: streamURL,
     auth: {
       bearer: token
     },
@@ -172,14 +105,15 @@ app.get("/api/stream/filter", async (req, res) => {
   stream
     .on("data", data => {
       try {
-        console.log(JSON.parse(data));
+        const json = JSON.parse(data);
+        console.log(json);
         res.write(data);
       } catch (e) {}
     })
     .on("error", error => {
       console.log("error =>", error);
-      if ((error.code = "ETIMEDOUT")) {
-        stream.emit("timeout");
+      if (error.code === "ESOCKETTIMEDOUT") {
+        res.send({ error: "timeout" });
       }
     });
 });
