@@ -13,23 +13,6 @@ const https = require("https");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-passport.use(
-  new BasicStrategy(function(username, password, done) {
-    User.findOne({ username: username }, function(err, user) {
-      if (err) {
-        return done(err);
-      }
-      if (!user) {
-        return done(null, false);
-      }
-      if (!user.validPassword(password)) {
-        return done(null, false);
-      }
-      return done(null, user);
-    });
-  })
-);
-
 const CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
 
