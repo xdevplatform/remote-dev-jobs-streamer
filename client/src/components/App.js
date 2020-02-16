@@ -26,6 +26,7 @@ class App extends React.Component {
         <div className="ui grid">
           <BrowserRouter>
             <Navbar />
+            <Route exact path="/" component={RuleList} />
             <Route exact path="/rules" component={RuleList} />
             <Route exact path="/jobs" component={JobList} />
           </BrowserRouter>
