@@ -32,15 +32,12 @@ const reducer = (state, action) => {
 };
 
 const RuleList = () => {
-  const [state, dispatch] = useReducer(logger(reducer), {
-    rules: [],
-    newRule: "",
-    isLoading: false,
-    errors: []
-  });
+  const initialState = { rules: [], newRule: "", isLoading: false, errors: [] };
+  const [state, dispatch] = useReducer(logger(reducer), initialState);
 
   const createRule = async ruleValue => {
     const payload = { add: [{ value: ruleValue }] };
+
     dispatch({ type: "change_loading_status", payload: true });
     const response = await axios.post(
       "/api/labs/1/tweets/stream/filter/rules",
@@ -65,7 +62,7 @@ const RuleList = () => {
   const showErrors = () => {
     if (state.errors && state.errors.length > 0) {
       return state.errors.map(error => (
-        <ErrorMessage key={error.title} error={error} />
+        <ErrorMessage key={error.title} error={error} styleType="negative" />
       ));
     }
   };

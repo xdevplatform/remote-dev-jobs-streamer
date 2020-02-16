@@ -1,18 +1,29 @@
 import React from "react";
 
-const ErrorMessage = ({ error }) => {
-  const errorDetails = error => {
-    if (error.details)
+const ErrorMessage = ({ error, styleType }) => {
+  const errorDetails = () => {
+    if (error.details) {
       return error.details.map(detail => <p key={detail}>{detail}</p>);
+    } else if (error.detail) {
+      return <p key={error.detail}>{error.detail}</p>;
+    }
+  };
+
+  const errorType = () => {
+    if (error.type) {
+      return (
+        <em>
+          See<a href={error.type}> error documentation </a>for more details.
+        </em>
+      );
+    }
   };
 
   return (
-    <div className="ui negative message">
+    <div className={`ui message ${styleType}`}>
       <div className="header">{error.title}</div>
-      {errorDetails(error)}
-      <em>
-        See<a href={error.type}> error documentation </a>for more details.
-      </em>
+      {errorDetails()}
+      {errorType()}
     </div>
   );
 };
