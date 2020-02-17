@@ -19,6 +19,7 @@ const io = socketIo(server);
 
 const CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
+
 let timeout = 0;
 
 const bearerTokenURL = new URL("https://api.twitter.com/oauth2/token");
@@ -30,6 +31,11 @@ const streamURL = new URL(
 const rulesURL = new URL(
   "https://api.twitter.com/labs/1/tweets/stream/filter/rules"
 );
+
+const errorMessage = {
+  title: "Please Wait",
+  detail: "Waiting for new jobs to be posted..."
+};
 
 const sleep = async delay => {
   return new Promise(resolve => setTimeout(() => resolve(true), delay));
@@ -100,83 +106,56 @@ app.post("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
   }
 });
 
-// app.get("/api/stream/filter", async (req, res) => {
-//   console.log("here");
-//   // const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-//   // const config = {
-//   //   url: streamURL,
-//   //   auth: {
-//   //     bearer: token
-//   //   },
-//   //   timeout: 20000
-//   // };
-//   // const stream = request.get(config);
-//   // stream
-//   //   .on("data", data => {
-//   //     try {
-//   //       const json = JSON.parse(data);
-//   //       console.log(json);
-//   //       socket.on("disconnect", () => console.log("Client disconnected"));
-//   //       // res.write(data);
-//   //     } catch (e) {}
-//   //   })
-//   //   .on("error", error => {
-//   //     console.log("error =>", error);
-//   //     if (error.code === "ESOCKETTIMEDOUT") {
-//   //       res.send({ error: "timeout" });
-//   //     }
-//   //   });
-// });
-
-const streamTweets = async (socket, token) => {
+const streamTweets = (socket, token) => {
   const config = {
     url: streamURL,
     auth: {
       bearer: token
     },
-    timeout: 20000
+    timeout: 31000
   };
 
   const stream = request.get(config);
 
   stream
-    .on("data", async data => {
-      const json = JSON.parse(data);
-      console.log(json);
-      if (json.connection_issue) {
-        emitError(socket, json);
-        await sleep(30000);
-        streamTweets(socket, token);
-        stream.abort();
-      } else {
-        socket.emit("tweet", json);
+    .on("data", data => {
+      try {
+        if (data.toString() !== "\r\n") {
+          const json = JSON.parse(data);
+          if (json.connection_issue) {
+            socket.emit("error", json);
+            reconnect(stream, socket, token);
+          } else {
+            console.log("json =>", json);
+            socket.emit("tweet", json);
+          }
+        }
+      } catch (e) {
+        // console.log("e =>", e);
+        console.log("STRING =>", data.toString());
+        console.log("DATA =>", data);
+        reconnect(stream, socket, token);
       }
     })
-    .on("error", async error => {
-      const errorMessage = {
-        title: "Connection timed out",
-        detail: "Waiting for new jobs to arrive...."
-      };
-      emitError(socket, errorMessage);
-      await sleep(30000);
-      streamTweets(socket, token);
-      stream.abort();
+    .on("error", error => {
+      console.log("error:", error);
+      socket.emit("error", errorMessage);
+      reconnect(stream, socket, token);
     });
-
-  return stream;
 };
 
-const emitError = async (socket, error) => {
-  socket.emit("error", error);
+const reconnect = async (stream, socket, token) => {
   timeout++;
-  console.log("timeout =>", timeout);
+  stream.abort();
+  await sleep(2 ** timeout * 1000);
+  streamTweets(socket, token);
 };
 
 io.on("connection", async socket => {
   try {
     const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
     io.emit("connect", "Client connected");
-    streamTweets(io, token);
+    const stream = streamTweets(io, token);
   } catch (e) {}
 });
 

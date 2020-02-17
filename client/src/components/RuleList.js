@@ -35,8 +35,9 @@ const RuleList = () => {
   const initialState = { rules: [], newRule: "", isLoading: false, errors: [] };
   const [state, dispatch] = useReducer(logger(reducer), initialState);
 
-  const createRule = async ruleValue => {
-    const payload = { add: [{ value: ruleValue }] };
+  const createRule = async e => {
+    e.preventDefault();
+    const payload = { add: [{ value: state.newRule }] };
 
     dispatch({ type: "change_loading_status", payload: true });
     const response = await axios.post(
@@ -116,23 +117,24 @@ const RuleList = () => {
   return (
     <React.Fragment>
       <div className="twelve wide column">
-        <div className="ui fluid input">
-          <input
-            type="text"
-            value={state.newRule}
-            onChange={event =>
-              dispatch({ type: "rule_changed", payload: event.target.value })
-            }
-          />
-          <button
-            className="ui primary button"
-            onClick={event => createRule(state.newRule)}
-          >
-            Add Rule
-          </button>
-        </div>
-        {showErrors()}
-        {showRules()}
+        <form onSubmit={e => createRule(e)}>
+          <div className="ui fluid action input">
+            <input
+              type="text"
+              autofocus="true"
+              value={state.newRule}
+              onChange={event =>
+                dispatch({ type: "rule_changed", payload: event.target.value })
+              }
+            />
+            <button type="submit" className="ui primary button">
+              Add Rule
+            </button>
+          </div>
+
+          {showErrors()}
+          {showRules()}
+        </form>
       </div>
     </React.Fragment>
   );

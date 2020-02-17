@@ -1,6 +1,5 @@
 import React, { useEffect, useReducer } from "react";
 import Job from "./Job";
-import http from "http";
 import socketIOClient from "socket.io-client";
 import ErrorMessage from "./ErrorMessage";
 
@@ -46,10 +45,7 @@ const JobList = () => {
   };
 
   useEffect(() => {
-    const socket = streamTweets();
-    return () => {
-      socket.disconnect(true);
-    };
+    streamTweets();
   }, []);
 
   const showJobs = () => {
