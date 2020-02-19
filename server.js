@@ -126,14 +126,10 @@ const streamTweets = (socket, token) => {
             socket.emit("error", json);
             reconnect(stream, socket, token);
           } else {
-            console.log("json =>", json);
             socket.emit("tweet", json);
           }
         }
       } catch (e) {
-        // console.log("e =>", e);
-        console.log("STRING =>", data.toString());
-        console.log("DATA =>", data);
         reconnect(stream, socket, token);
       }
     })
