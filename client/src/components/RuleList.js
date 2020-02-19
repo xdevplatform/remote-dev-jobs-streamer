@@ -121,7 +121,7 @@ const RuleList = () => {
           <div className="ui fluid action input">
             <input
               type="text"
-              autofocus="true"
+              autoFocus="true"
               value={state.newRule}
               onChange={event =>
                 dispatch({ type: "rule_changed", payload: event.target.value })
