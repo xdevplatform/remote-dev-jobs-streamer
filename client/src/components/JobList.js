@@ -6,7 +6,11 @@ import ErrorMessage from "./ErrorMessage";
 const reducer = (state, action) => {
   switch (action.type) {
     case "add_job":
-      return { ...state, jobs: [action.payload, ...state.jobs] };
+      return {
+        ...state,
+        jobs: [action.payload, ...state.jobs],
+        jobsLastUpdated: Math.floor(Date.now() / 1000)
+      };
     case "show_error":
       return { ...state, error: action.payload };
     default:
@@ -15,9 +19,14 @@ const reducer = (state, action) => {
 };
 
 const JobList = () => {
-  const initialState = { jobs: [], error: {} };
+  const initialState = {
+    jobs: [],
+    error: {},
+    jobsLastUpdated: Math.floor(Date.now() / 1000)
+  };
+
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { jobs, error } = state;
+  const { jobs, error, jobsLastUpdated } = state;
 
   const streamTweets = () => {
     const socket = socketIOClient("/");
@@ -40,7 +49,48 @@ const JobList = () => {
 
   const showError = () => {
     if (error && error.detail) {
-      return <ErrorMessage key={error} error={error} styleType="warning" />;
+      return (
+        <div className="twelve wide column">
+          <ErrorMessage key={error} error={error} styleType="warning" />
+        </div>
+      );
+    }
+  };
+
+  const showSpinner = () => {
+    let message = "";
+    if (error.title === "ConnectionException") {
+      message = "Reconnecting...";
+    }
+    return (
+      <div className="twelve wide column">
+        <div className="ui active centered large inline loader">
+          <img
+            className="ui image"
+            src="/Twitter_Logo_Blue.png"
+            alt="Twitter Logo"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const waitingMessage = () => {
+    const lastUpdate = Math.floor(Date.now() / 1000) - jobsLastUpdated;
+    const message = {
+      title: "Still working",
+      detail: "Waiting for new jobs to be Tweeted"
+    };
+
+    if (lastUpdate > 5) {
+      return (
+        <React.Fragment>
+          <div className="twelve wide column">
+            <ErrorMessage key={message} error={message} styleType="success" />
+          </div>
+          {showSpinner()}
+        </React.Fragment>
+      );
     }
   };
 
@@ -57,21 +107,15 @@ const JobList = () => {
           ))}
         </div>
       );
-    } else {
+    } else if (error) {
       return (
         <React.Fragment>
-          <div className="twelve wide column">
-            {showError()}{" "}
-            <div className="ui active centered large inline loader">
-              <img
-                className="ui image"
-                src="/Twitter_Logo_Blue.png"
-                alt="Twitter Logo"
-              />
-            </div>
-          </div>
+          {showError()}
+          {showSpinner()}
         </React.Fragment>
       );
+    } else {
+      return <React.Fragment>{waitingMessage()}</React.Fragment>;
     }
   };
 
