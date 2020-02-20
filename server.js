@@ -128,6 +128,8 @@ const streamTweets = (socket, token) => {
           } else {
             socket.emit("tweet", json);
           }
+        } else {
+          socket.emit("waiting", data.toString());
         }
       } catch (e) {
         reconnect(stream, socket, token);
