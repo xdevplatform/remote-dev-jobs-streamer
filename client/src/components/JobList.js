@@ -2,6 +2,7 @@ import React, { useEffect, useReducer } from "react";
 import Job from "./Job";
 import socketIOClient from "socket.io-client";
 import ErrorMessage from "./ErrorMessage";
+import logger from "use-reducer-logger";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -9,10 +10,12 @@ const reducer = (state, action) => {
       return {
         ...state,
         jobs: [action.payload, ...state.jobs],
-        jobsLastUpdated: Math.floor(Date.now() / 1000)
+        isWaitingForJobs: false
       };
     case "show_error":
-      return { ...state, error: action.payload };
+      return { ...state, error: action.payload, isWaitingForJobs: false };
+    case "update_waiting":
+      return { ...state, error: null, isWaitingForJobs: true };
     default:
       return state;
   }
@@ -22,46 +25,49 @@ const JobList = () => {
   const initialState = {
     jobs: [],
     error: {},
-    jobsLastUpdated: Math.floor(Date.now() / 1000)
+    isWaitingForJobs: true
   };
 
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { jobs, error, jobsLastUpdated } = state;
+  const [state, dispatch] = useReducer(logger(reducer), initialState);
+  const { jobs, error, isWaitingForJobs } = state;
 
   const streamTweets = () => {
     const socket = socketIOClient("/");
     socket.on("connect", () => console.log("Client connected"));
     socket.on("tweet", json => {
-      console.log("json =>", json);
-
       if (json.data) {
-        console.log("dispatching action");
         dispatch({ type: "add_job", payload: json });
       }
     });
+    socket.on("waiting", data => {
+      dispatch({ type: "update_waiting" });
+    });
     socket.on("error", data => {
-      console.log("connection error =>", data);
       dispatch({ type: "show_error", payload: data });
     });
-
-    return socket;
   };
 
-  const showError = () => {
+  const errorMessage = () => {
+    const message = {
+      title: "Reconnecting",
+      detail: "Please wait while we reconnect to the stream."
+    };
+
     if (error && error.detail) {
       return (
         <div className="twelve wide column">
-          <ErrorMessage key={error} error={error} styleType="warning" />
+          <ErrorMessage key={error.title} error={error} styleType="warning" />
+          <ErrorMessage
+            key={message.title}
+            error={message}
+            styleType="success"
+          />
         </div>
       );
     }
   };
 
-  const showSpinner = () => {
-    let message = "";
-    if (error.title === "ConnectionException") {
-      message = "Reconnecting...";
-    }
+  const spinner = () => {
     return (
       <div className="twelve wide column">
         <div className="ui active centered large inline loader">
@@ -76,19 +82,22 @@ const JobList = () => {
   };
 
   const waitingMessage = () => {
-    const lastUpdate = Math.floor(Date.now() / 1000) - jobsLastUpdated;
     const message = {
       title: "Still working",
       detail: "Waiting for new jobs to be Tweeted"
     };
 
-    if (lastUpdate > 5) {
+    if (isWaitingForJobs) {
       return (
         <React.Fragment>
           <div className="twelve wide column">
-            <ErrorMessage key={message} error={message} styleType="success" />
+            <ErrorMessage
+              key={message.title}
+              error={message}
+              styleType="success"
+            />
           </div>
-          {showSpinner()}
+          {spinner()}
         </React.Fragment>
       );
     }
@@ -101,17 +110,20 @@ const JobList = () => {
   const showJobs = () => {
     if (jobs.length > 0) {
       return (
-        <div className="ui segments">
-          {jobs.map(job => (
-            <Job key={job.data.id} json={job} />
-          ))}
-        </div>
+        <React.Fragment>
+          {waitingMessage()}
+          <div className="ui segments">
+            {jobs.map(job => (
+              <Job key={job.data.id} json={job} />
+            ))}
+          </div>
+        </React.Fragment>
       );
     } else if (error) {
       return (
         <React.Fragment>
-          {showError()}
-          {showSpinner()}
+          {errorMessage()}
+          {spinner()}
         </React.Fragment>
       );
     } else {
