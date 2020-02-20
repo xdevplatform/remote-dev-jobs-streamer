@@ -13,7 +13,12 @@ const ErrorMessage = ({ error, styleType }) => {
     if (error.type) {
       return (
         <em>
-          See<a href={error.type}> error documentation </a>for more details.
+          See
+          <a href={error.type} target="_blank">
+            {" "}
+            error documentation{" "}
+          </a>
+          for more details.
         </em>
       );
     }
