@@ -57,7 +57,7 @@ async function bearerToken(auth) {
   return JSON.parse(response.body).access_token;
 }
 
-app.get("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
+app.get("/rules", async (req, res) => {
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
   const requestConfig = {
     url: rulesURL,
@@ -72,17 +72,15 @@ app.get("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
 
     if (response.statusCode !== 200) {
       throw new Error(response.body.error.message);
-      return;
     }
 
     res.send(response);
   } catch (e) {
-    console.error(`Could not get rules. An error occurred: ${e}`);
-    process.exit(-1);
+    res.send(e);
   }
 });
 
-app.post("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
+app.post("/rules", async (req, res) => {
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
   const requestConfig = {
     url: rulesURL,
@@ -98,11 +96,10 @@ app.post("/api/labs/1/tweets/stream/filter/rules", async (req, res) => {
     if (response.statusCode === 200 || response.statusCode === 201) {
       res.send(response);
     } else {
-      throw new Error(response.body.error.message);
-      return;
+      throw new Error(response);
     }
   } catch (e) {
-    res.statusCode(response.statusCode).send(response);
+    res.send(e);
   }
 });
 
@@ -120,23 +117,19 @@ const streamTweets = (socket, token) => {
   stream
     .on("data", data => {
       try {
-        if (data.toString() !== "\r\n") {
-          const json = JSON.parse(data);
-          if (json.connection_issue) {
-            socket.emit("error", json);
-            reconnect(stream, socket, token);
-          } else {
-            socket.emit("tweet", json);
-          }
+        const json = JSON.parse(data);
+        if (json.connection_issue) {
+          socket.emit("error", json);
+          reconnect(stream, socket, token);
         } else {
-          socket.emit("waiting", data.toString());
+          socket.emit("tweet", json);
         }
       } catch (e) {
-        reconnect(stream, socket, token);
+        socket.emit("heartbeat");
       }
     })
     .on("error", error => {
-      console.log("error:", error);
+      // Connection timed out
       socket.emit("error", errorMessage);
       reconnect(stream, socket, token);
     });
