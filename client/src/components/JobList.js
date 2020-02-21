@@ -2,7 +2,7 @@ import React, { useEffect, useReducer } from "react";
 import Job from "./Job";
 import socketIOClient from "socket.io-client";
 import ErrorMessage from "./ErrorMessage";
-import logger from "use-reducer-logger";
+import Spinner from "./Spinner";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -10,12 +10,12 @@ const reducer = (state, action) => {
       return {
         ...state,
         jobs: [action.payload, ...state.jobs],
-        isWaitingForJobs: false
+        isWaiting: false
       };
     case "show_error":
-      return { ...state, error: action.payload, isWaitingForJobs: false };
+      return { ...state, error: action.payload, isWaiting: false };
     case "update_waiting":
-      return { ...state, error: null, isWaitingForJobs: true };
+      return { ...state, error: null, isWaiting: true };
     default:
       return state;
   }
@@ -25,21 +25,21 @@ const JobList = () => {
   const initialState = {
     jobs: [],
     error: {},
-    isWaitingForJobs: true
+    isWaiting: true
   };
 
-  const [state, dispatch] = useReducer(logger(reducer), initialState);
-  const { jobs, error, isWaitingForJobs } = state;
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { jobs, error, isWaiting } = state;
 
   const streamTweets = () => {
     const socket = socketIOClient("/");
-    socket.on("connect", () => console.log("Client connected"));
+    socket.on("connect", () => {});
     socket.on("tweet", json => {
       if (json.data) {
         dispatch({ type: "add_job", payload: json });
       }
     });
-    socket.on("waiting", data => {
+    socket.on("heartbeat", data => {
       dispatch({ type: "update_waiting" });
     });
     socket.on("error", data => {
@@ -67,27 +67,13 @@ const JobList = () => {
     }
   };
 
-  const spinner = () => {
-    return (
-      <div className="twelve wide column">
-        <div className="ui active centered large inline loader">
-          <img
-            className="ui image"
-            src="/Twitter_Logo_Blue.png"
-            alt="Twitter Logo"
-          />
-        </div>
-      </div>
-    );
-  };
-
   const waitingMessage = () => {
     const message = {
       title: "Still working",
       detail: "Waiting for new jobs to be Tweeted"
     };
 
-    if (isWaitingForJobs) {
+    if (isWaiting) {
       return (
         <React.Fragment>
           <div className="twelve wide column">
@@ -97,7 +83,7 @@ const JobList = () => {
               styleType="success"
             />
           </div>
-          {spinner()}
+          <Spinner />
         </React.Fragment>
       );
     }
@@ -123,7 +109,7 @@ const JobList = () => {
       return (
         <React.Fragment>
           {errorMessage()}
-          {spinner()}
+          <Spinner />
         </React.Fragment>
       );
     } else {

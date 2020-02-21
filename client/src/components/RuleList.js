@@ -1,8 +1,8 @@
 import React, { useEffect, useReducer } from "react";
 import axios from "axios";
 import Rule from "./Rule";
-import logger from "use-reducer-logger";
 import ErrorMessage from "./ErrorMessage";
+import Spinner from "./Spinner";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -33,68 +33,86 @@ const reducer = (state, action) => {
 
 const RuleList = () => {
   const initialState = { rules: [], newRule: "", isLoading: false, errors: [] };
-  const [state, dispatch] = useReducer(logger(reducer), initialState);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const exampleRule = `(developer OR engineer) remote (context:66.850073441055133696
+                OR context:65.847544972781826048)`;
+  const ruleMeaning = `This example rule will match Tweets containing the  
+     keywords "developer" or "engineer" and the keyword "remote", but only if 
+      they contain the context entity labels "Careers" or "Recruiting"`;
+  const operatorsURL =
+    "https://developer.twitter.com/en/docs/labs/filtered-stream/operators";
+  const rulesURL = "/rules";
 
   const createRule = async e => {
     e.preventDefault();
     const payload = { add: [{ value: state.newRule }] };
 
     dispatch({ type: "change_loading_status", payload: true });
-    const response = await axios.post(
-      "/api/labs/1/tweets/stream/filter/rules",
-      payload
-    );
-    if (response.data.body.errors)
-      dispatch({ type: "add_errors", payload: response.data.body.errors });
-    else {
-      dispatch({ type: "add_rule", payload: response.data.body.data });
+    try {
+      const response = await axios.post(rulesURL, payload);
+      if (response.data.body.errors)
+        dispatch({ type: "add_errors", payload: response.data.body.errors });
+      else {
+        dispatch({ type: "add_rule", payload: response.data.body.data });
+      }
+      dispatch({ type: "change_loading_status", payload: false });
+    } catch (e) {
+      dispatch({
+        type: "add_errors",
+        payload: [{ detail: e.message }]
+      });
+      dispatch({ type: "change_loading_status", payload: false });
     }
-    dispatch({ type: "change_loading_status", payload: false });
   };
 
   const deleteRule = async id => {
     const payload = { delete: { ids: [id] } };
     dispatch({ type: "change_loading_status", payload: true });
-    await axios.post("/api/labs/1/tweets/stream/filter/rules", payload);
+    await axios.post(rulesURL, payload);
     dispatch({ type: "delete_rule", payload: id });
     dispatch({ type: "change_loading_status", payload: false });
   };
 
-  const showErrors = () => {
-    if (state.errors && state.errors.length > 0) {
-      return state.errors.map(error => (
+  const errors = () => {
+    const { errors } = state;
+
+    if (errors && errors.length > 0) {
+      return errors.map(error => (
         <ErrorMessage key={error.title} error={error} styleType="negative" />
       ));
     }
   };
 
-  const showRules = () => {
-    if (!state.isLoading) {
-      if (state.rules && state.rules.length > 0) {
-        return state.rules.map(rule => (
+  const rules = () => {
+    const { isLoading, rules } = state;
+
+    const message = {
+      title: "No rules present",
+      details: [
+        `There are currently no rules on this stream. Start by adding the rule 
+        below.`,
+        exampleRule,
+        ruleMeaning
+      ],
+      type: operatorsURL
+    };
+
+    if (!isLoading) {
+      if (rules && rules.length > 0) {
+        return rules.map(rule => (
           <Rule key={rule.id} data={rule} onRuleDelete={id => deleteRule(id)} />
         ));
       } else {
         return (
-          <div className="ui warning message">
-            <p>
-              There are currently no rules on this stream. Add a rule above. See
-              the
-              <a href="https://developer.twitter.com/en/docs/labs/filtered-stream/operators">
-                &nbsp;queries guide&nbsp;
-              </a>
-              for reference.
-            </p>
-          </div>
+          <ErrorMessage
+            key={message.title}
+            error={message}
+            styleType="warning"
+          />
         );
       }
     } else {
-      return (
-        <div className="ui active centered large inline loader">
-          <p></p>
-          <p></p>
-        </div>
-      );
+      return <Spinner />;
     }
   };
 
@@ -102,9 +120,7 @@ const RuleList = () => {
     (async () => {
       dispatch({ type: "change_loading_status", payload: true });
 
-      const response = await axios.get(
-        "/api/labs/1/tweets/stream/filter/rules"
-      );
+      const response = await axios.get(rulesURL);
       const { data: payload = [] } = response.data.body;
       dispatch({
         type: "show_rules",
@@ -115,28 +131,25 @@ const RuleList = () => {
   }, []);
 
   return (
-    <React.Fragment>
-      <div className="twelve wide column">
-        <form onSubmit={e => createRule(e)}>
-          <div className="ui fluid action input">
-            <input
-              type="text"
-              autoFocus="true"
-              value={state.newRule}
-              onChange={event =>
-                dispatch({ type: "rule_changed", payload: event.target.value })
-              }
-            />
-            <button type="submit" className="ui primary button">
-              Add Rule
-            </button>
-          </div>
-
-          {showErrors()}
-          {showRules()}
-        </form>
-      </div>
-    </React.Fragment>
+    <div className="twelve wide column">
+      <form onSubmit={e => createRule(e)}>
+        <div className="ui fluid action input">
+          <input
+            type="text"
+            autoFocus={true}
+            value={state.newRule}
+            onChange={e =>
+              dispatch({ type: "rule_changed", payload: e.target.value })
+            }
+          />
+          <button type="submit" className="ui primary button">
+            Add Rule
+          </button>
+        </div>
+        {errors()}
+        {rules()}
+      </form>
+    </div>
   );
 };
 

@@ -14,11 +14,11 @@ const ErrorMessage = ({ error, styleType }) => {
       return (
         <em>
           See
-          <a href={error.type} target="_blank">
+          <a href={error.type} target="_blank" rel="noopener noreferrer">
             {" "}
-            error documentation{" "}
+            Twitter documentation{" "}
           </a>
-          for more details.
+          for further details.
         </em>
       );
     }
