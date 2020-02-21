@@ -10,6 +10,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         jobs: [action.payload, ...state.jobs],
+        error: null,
         isWaiting: false
       };
     case "show_error":
@@ -43,6 +44,7 @@ const JobList = () => {
       dispatch({ type: "update_waiting" });
     });
     socket.on("error", data => {
+      console.log("error =>", data);
       dispatch({ type: "show_error", payload: data });
     });
   };
@@ -62,6 +64,7 @@ const JobList = () => {
             error={message}
             styleType="success"
           />
+          <Spinner />
         </div>
       );
     }
@@ -96,28 +99,22 @@ const JobList = () => {
   const showJobs = () => {
     if (jobs.length > 0) {
       return (
-        <React.Fragment>
-          {waitingMessage()}
-          <div className="ui segments">
-            {jobs.map(job => (
-              <Job key={job.data.id} json={job} />
-            ))}
-          </div>
-        </React.Fragment>
+        <div className="ui segments">
+          {jobs.map(job => (
+            <Job key={job.data.id} json={job} />
+          ))}
+        </div>
       );
-    } else if (error) {
-      return (
-        <React.Fragment>
-          {errorMessage()}
-          <Spinner />
-        </React.Fragment>
-      );
-    } else {
-      return <React.Fragment>{waitingMessage()}</React.Fragment>;
     }
   };
 
-  return <div className="twelve wide stretched column">{showJobs()}</div>;
+  return (
+    <div className="twelve wide stretched column">
+      {errorMessage()}
+      {waitingMessage()}
+      {showJobs()}
+    </div>
+  );
 };
 
 export default JobList;
