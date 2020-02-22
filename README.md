@@ -1,4 +1,3 @@
-
 # Remote Developer Jobs Streaming App
 
 <p>
@@ -11,7 +10,7 @@
   </a>
 </p>
 
-Stream remote developer jobs in realtime using the Twitter API and Tweet Annotations. This web app uses the [Filtered Stream endpoints](https://developer.twitter.com/en/docs/labs/filtered-stream/overview) in [Twitter Developer Labs](https://developer.twitter.com/en/labs) to listen for and display Tweets containing remote developer job postings.
+Stream remote developer jobs in realtime using the Twitter API. This web app uses the [Filtered Stream endpoints](https://developer.twitter.com/en/docs/labs/filtered-stream/overview) and [Tweet Annotations](https://developer.twitter.com/en/docs/labs/overview/whats-new/annotations) in [Twitter Developer Labs](https://developer.twitter.com/en/labs) to listen for and display Tweets containing remote developer job postings.
 
 ## Install
 
