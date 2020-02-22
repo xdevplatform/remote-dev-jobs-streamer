@@ -44,7 +44,6 @@ const JobList = () => {
       dispatch({ type: "update_waiting" });
     });
     socket.on("error", data => {
-      console.log("error =>", data);
       dispatch({ type: "show_error", payload: data });
     });
   };
