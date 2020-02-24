@@ -1,4 +1,3 @@
-
 # Remote Developer Jobs Streaming App
 
 <p>
@@ -11,7 +10,7 @@
   </a>
 </p>
 
-Stream remote developer jobs in realtime using the Twitter API and Tweet Annotations. This web app uses the [Filtered Stream endpoints](https://developer.twitter.com/en/docs/labs/filtered-stream/overview) in [Twitter Developer Labs](https://developer.twitter.com/en/labs) to listen for and display Tweets containing remote developer job postings.
+Stream remote developer jobs in realtime using the Twitter API. This web app uses the [Filtered Stream endpoints](https://developer.twitter.com/en/docs/labs/filtered-stream/overview) and [Tweet Annotations](https://developer.twitter.com/en/docs/labs/overview/whats-new/annotations) in [Twitter Developer Labs](https://developer.twitter.com/en/labs) to listen for and display Tweets containing remote developer job postings.
 
 ## Install
 
@@ -25,7 +24,9 @@ npm install
 
 ## Environment setup
 
-Go into the details section of the appropriate app from your [Twiter apps dashboard](https://developer.twitter.com/en/apps) and under the "Keys and tokens" tab insert your consumer API keys below.
+Go into the details section of the appropriate app from your [Twiter apps dashboard](https://developer.twitter.com/en/apps) and under the "Keys and tokens" tab insert your consumer API keys below. Within your [apps dashboard](https://developer.twitter.com/en/apps), remember to select the app you have set up with Twitter Developer Labs.
+
+
 ```sh
 export TWITTER_CONSUMER_KEY=<YOUR API KEY HERE>
 export TWITTER_CONSUMER_SECRET=<YOUR API SECRET KEY HERE>
@@ -37,6 +38,15 @@ From the project root directory run the following
 
 ```sh
 yarn dev
+```
+
+After your app starts up, your default browser will automatically open and navigate to the rules management section of the app. Simply add the rule below to match Tweets containing remote developer job postings.
+
+
+```sh
+# Match Tweets containing the keywords "developer" or "engineer" and the keyword "remote", but only if they contain the context entity labels "Job search" or "Recruitment"
+
+(developer OR engineer) remote (context:66.850073441055133696 OR context:66.961961812492148736)
 ```
 
 ## Author
