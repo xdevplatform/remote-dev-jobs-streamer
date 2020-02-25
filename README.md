@@ -49,6 +49,8 @@ After your app starts up, your default browser will automatically open and navig
 (developer OR engineer) remote (context:66.850073441055133696 OR context:66.961961812492148736)
 ```
 
+
+
 ## Author
 
 👤 **Tony Vu**
@@ -72,3 +74,10 @@ in all interactions with the community.
 Copyright 2020 Twitter, Inc.
 
 Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
+## Production considerations
+
+This app is for demonstration purposes only, and should not be used in production without further modifcations. Dependencies on databases, and other types of services are intentionally not within the scope of this sample app. Some considerations below:
+
+* The application can handle light usage, but you may experience API rate limit issues under heavier load. Consider storing data locally in a secure database, or caching requests.
+* To support multiple users (admins, team members, customers, etc), consider implementing a form of Access Control List for better security.
