@@ -34,8 +34,8 @@ const reducer = (state, action) => {
 const RuleList = () => {
   const initialState = { rules: [], newRule: "", isLoading: false, errors: [] };
   const [state, dispatch] = useReducer(reducer, initialState);
-  const exampleRule = `(developer OR engineer) remote (context:66.850073441055133696
-                OR context:65.847544972781826048)`;
+  const exampleRule = `(developer OR engineer) remote (context:66.961961812492148736
+                OR context:66.850073441055133696)`;
   const ruleMeaning = `This example rule will match Tweets containing the  
      keywords "developer" or "engineer" and the keyword "remote", but only if 
       they contain the context entity labels "Careers" or "Recruiting"`;
