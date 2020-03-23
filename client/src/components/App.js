@@ -4,6 +4,7 @@ import { BrowserRouter, Route } from "react-router-dom";
 import Navbar from "./Navbar";
 import JobList from "./JobList";
 import RuleList from "./RuleList";
+import RecentJobList from "./RecentJobList";
 
 class App extends React.Component {
   render() {
@@ -29,6 +30,7 @@ class App extends React.Component {
             <Route exact path="/" component={RuleList} />
             <Route exact path="/rules" component={RuleList} />
             <Route exact path="/jobs" component={JobList} />
+            <Route exact path="/recent" component={RecentJobList} />
           </BrowserRouter>
         </div>
       </div>

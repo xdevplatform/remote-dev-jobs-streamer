@@ -8,6 +8,9 @@ const Navbar = () => {
         <NavLink to="/jobs" className="item">
           New Jobs
         </NavLink>
+        <NavLink to="/recent" className="item">
+          Recent Jobs
+        </NavLink>
         <NavLink to="/rules" className="item">
           Manage Rules
         </NavLink>

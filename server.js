@@ -32,6 +32,8 @@ const rulesURL = new URL(
   "https://api.twitter.com/labs/1/tweets/stream/filter/rules"
 );
 
+const searchURL = new URL("https://api.twitter.com/labs/2/tweets/search");
+
 const errorMessage = {
   title: "Please Wait",
   detail: "Waiting for new jobs to be posted..."
@@ -58,9 +60,14 @@ async function bearerToken(auth) {
 }
 
 app.get("/rules", async (req, res) => {
+  const query =
+    "(developer OR engineer) remote (context:65.847544972781826048 OR context:66.850073441055133696 OR context:66.961961812492148736)";
   const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
   const requestConfig = {
     url: rulesURL,
+    qs: {
+      query: query
+    },
     auth: {
       bearer: token
     },
@@ -94,6 +101,30 @@ app.post("/rules", async (req, res) => {
     const response = await post(requestConfig);
 
     if (response.statusCode === 200 || response.statusCode === 201) {
+      res.send(response);
+    } else {
+      throw new Error(response);
+    }
+  } catch (e) {
+    res.send(e);
+  }
+});
+
+app.get("/search", async (req, res) => {
+  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
+
+  const requestConfig = {
+    url: searchURL,
+    auth: {
+      bearer: token
+    },
+    json: req.body
+  };
+
+  try {
+    const response = await post(requestConfig);
+
+    if (response.statusCode === 200) {
       res.send(response);
     } else {
       throw new Error(response);
