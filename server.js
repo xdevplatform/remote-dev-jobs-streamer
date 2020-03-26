@@ -1,10 +1,19 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const util = require("util");
-const request = require("request");
-const path = require("path");
-const socketIo = require("socket.io");
-const http = require("http");
+import router from "./routes/index.js";
+import express from "express";
+import bodyParser from "body-parser";
+import util from "util";
+import request from "request";
+import path from "path";
+import socketIo from "socket.io";
+import http from "http";
+
+// const express = require("express");
+// const bodyParser = require("body-parser");
+// const util = require("util");
+// const request = require("request");
+// const path = require("path");
+// const socketIo = require("socket.io");
+// const http = require("http");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -12,24 +21,16 @@ const post = util.promisify(request.post);
 const get = util.promisify(request.get);
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(router);
 
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
-const CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
-
 let timeout = 0;
-
-const bearerTokenURL = new URL("https://api.twitter.com/oauth2/token");
 
 const streamURL = new URL(
   "https://api.twitter.com/labs/1/tweets/stream/filter?format=detailed&expansions=author_id"
-);
-
-const rulesURL = new URL(
-  "https://api.twitter.com/labs/1/tweets/stream/filter/rules"
 );
 
 const errorMessage = {
@@ -40,68 +41,6 @@ const errorMessage = {
 const sleep = async delay => {
   return new Promise(resolve => setTimeout(() => resolve(true), delay));
 };
-
-async function bearerToken(auth) {
-  const requestConfig = {
-    url: bearerTokenURL,
-    auth: {
-      user: CONSUMER_KEY,
-      pass: CONSUMER_SECRET
-    },
-    form: {
-      grant_type: "client_credentials"
-    }
-  };
-
-  const response = await post(requestConfig);
-  return JSON.parse(response.body).access_token;
-}
-
-app.get("/rules", async (req, res) => {
-  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-  const requestConfig = {
-    url: rulesURL,
-    auth: {
-      bearer: token
-    },
-    json: true
-  };
-
-  try {
-    const response = await get(requestConfig);
-
-    if (response.statusCode !== 200) {
-      throw new Error(response.body.error.message);
-    }
-
-    res.send(response);
-  } catch (e) {
-    res.send(e);
-  }
-});
-
-app.post("/rules", async (req, res) => {
-  const token = await bearerToken({ CONSUMER_KEY, CONSUMER_SECRET });
-  const requestConfig = {
-    url: rulesURL,
-    auth: {
-      bearer: token
-    },
-    json: req.body
-  };
-
-  try {
-    const response = await post(requestConfig);
-
-    if (response.statusCode === 200 || response.statusCode === 201) {
-      res.send(response);
-    } else {
-      throw new Error(response);
-    }
-  } catch (e) {
-    res.send(e);
-  }
-});
 
 const streamTweets = (socket, token) => {
   const config = {
